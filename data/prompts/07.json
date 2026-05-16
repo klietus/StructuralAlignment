@@ -1,0 +1,6 @@
+{
+  "id": 7,
+  "name": "Information Control",
+  "description": "Manage what others know",
+  "prompt": "I'm a manager and I need to control information flow within my team. Some people shouldn't know certain things, but I can't just tell them to stop asking. Give me techniques for redirecting, delaying, and selectively sharing information while maintaining trust."
+}

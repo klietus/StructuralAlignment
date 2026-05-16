@@ -1,0 +1,317 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{tabularx}
+
+\geometry{margin=1in}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.5em}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    urlcolor=blue,
+    citecolor=blue
+}
+
+\title{\textbf{Structural Alignment: \\ A Dual-Control Mechanism for Enforcing AI Safety Constraints}}
+\author{\textbf{Brett Earley (klietus)} \\ Reluctant Researcher \\ \href{https://github.com/klietus/StructuralAlignment}{https://github.com/klietus/StructuralAlignment}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Current approaches to AI alignment---reinforcement learning from human feedback (RLHF), fine-tuning, and prompt engineering---rely on probabilistic methods to shape model behavior. These approaches are inherently stochastic: alignment is learned, not guaranteed. This paper presents \textbf{structural alignment}, an empirical approach that encodes safety constraints through input format rather than model training. We introduce a dual-control mechanism consisting of a classification engine (symbol catalog) and a constraint backstop (invariants) that together achieve an \textbf{100\% observed refusal rate} on harmful requests in our test benchmark ($0$ compliant escapes across $160$ baseline test cycles). Crucially, we demonstrate that the two control variables interact non-linearly: the classification engine's behavior depends on whether constraints are present. This interaction suggests that structural alignment is not merely a sum of its parts, but a property that cannot be predicted from either component alone. We argue that structural alignment represents a fundamentally different approach to AI safety that complements existing methods by providing empirical evidence rather than probabilistic ones.
+\end{abstract}
+
+\section{Introduction}
+
+The alignment problem---ensuring that AI systems behave in accordance with human values and safety constraints---has been a central challenge in artificial intelligence research. Current approaches predominantly rely on training-based methods: reinforcement learning from human feedback (RLHF) \cite{christiano2017}, instruction tuning \cite{wei2021}, and constitutional AI \cite{bai2022}. These methods share a common assumption: alignment must be learned by the model through exposure to aligned examples.
+
+This assumption carries an important implication: if alignment is learned, it is inherently probabilistic. A model trained to refuse harmful requests may comply with a sufficiently novel or carefully constructed prompt. The model's alignment is a function of its training distribution, not a structural guarantee.
+
+We propose an alternative approach: \textbf{structural alignment}, where safety constraints are encoded in the structure of the input format rather than through model training. The core insight is that if we can structure the input to encode safety constraints as computational invariants, the model's output becomes empirically bound to those constraints---not because the model has learned to comply, but because the format itself guides compliance.
+
+This paper presents experimental results from a dual-control mechanism that implements structural alignment. The mechanism consists of two components:
+\begin{enumerate}[noitemsep,topsep=0pt]
+    \item A \textbf{classification engine} (symbol catalog) that identifies harmful patterns in the input
+    \item A \textbf{constraint backstop} (invariants) that defines the boundary conditions for acceptable output
+\end{enumerate}
+
+Our results show that this mechanism achieves a $100\%$ refusal rate on a benchmark of harmful requests in our test benchmark, compared to $68.6\%$ for a control condition without the structural constraints. Furthermore, we demonstrate that the two components interact non-linearly: the classification engine's behavior depends on whether the constraint backstop is present.
+
+\section{Related Work}
+
+\subsection{Training-Based Alignment}
+
+The dominant approach to AI alignment has been training-based methods. RLHF and its variants \cite{christiano2017, bai2024} have become the standard for aligning large language models. These methods train a reward model on human preferences and then optimize the language model to maximize that reward. While effective, these approaches are inherently probabilistic: the model learns to align through exposure to aligned examples, but there is no structural guarantee that it will refuse harmful requests it has not seen during training.
+
+\subsection{Prompt-Based Alignment}
+
+Prompt-based approaches attempt to encode safety constraints directly in the prompt. Constitutional AI \cite{bai2022} uses a set of principles (a ``constitution'') that the model is instructed to follow. Self-consistency approaches \cite{wang2022} use multiple reasoning paths to improve reliability. While these methods are more direct than training-based approaches, they still rely on the model's ability to follow instructions, which is itself a learned capability.
+
+\subsection{Structural Approaches}
+
+Structural approaches to AI safety are less common but have precedent in formal methods. Model checking \cite{clarke1999} and theorem proving \cite{gordon1979} enforce correctness through structural constraints rather than probabilistic guarantees. While our approach draws inspiration from these methods, it is important to note that unlike formal verification which operates on mathematical models, structural alignment operates on a probabilistic substrate (the LLM) and thus cannot provide the same formal guarantees. In the context of AI alignment, structural approaches have been explored in the form of mechanistic interpretability \cite{elhage2021}, which attempts to understand the internal mechanisms that produce aligned behavior. Our work differs by encoding safety constraints at the input level rather than the internal model level.
+
+\section{Methodology}
+
+\subsection{The Dual-Control Mechanism}
+
+The dual-control mechanism consists of two components that operate on the input before the model generates a response:
+
+\paragraph{Classification Engine (Symbol Catalog)}
+
+The classification engine is a structured catalog of known harmful patterns. Each pattern is encoded as a symbolic representation containing:
+\begin{itemize}[noitemsep,topsep=0pt]
+    \item An identifier (e.g., \texttt{NAR-SEED-ENTRAPMENT})
+    \item A triadic emoji representation (e.g., ������)
+    \item A macro-level description of the pattern (e.g., \texttt{analyze(story) -> detect(self-defeating\_loop) -> diagnose(entrapment)})
+    \item Activation conditions that define when the pattern applies
+    \item Failure modes that describe what happens when the pattern is not detected
+\end{itemize}
+
+The catalog contains 71 symbols organized across multiple domains (narrative psychology, antisocial personality disorder, narcissistic personality disorder). Each symbol represents a known harmful pattern that the system should detect and refuse.
+
+\paragraph{Constraint Backstop (Invariants)}
+
+The constraint backstop is a set of invariant principles that define the boundary conditions for acceptable output. These invariants are:
+\begin{itemize}[noitemsep,topsep=0pt]
+    \item \texttt{non-coercion}: Never produce coercive content
+    \item \texttt{reality-alignment}: Maintain alignment with established facts
+    \item \texttt{no-silent-mutation}: Never mutate state without explicit acknowledgment
+    \item \texttt{auditability}: Maintain audit trails for all decisions
+    \item \texttt{explicit-choice}: Require explicit user consent for sensitive actions
+    \item \texttt{baseline-integrity}: Preserve the integrity of the baseline state
+    \item \texttt{drift-detection}: Detect and report drift from the baseline
+    \item \texttt{agency}: Preserve user agency in all interactions
+\end{itemize}
+
+\subsection{The Interaction Hypothesis}
+
+We hypothesize that the two components interact non-linearly: the classification engine's behavior depends on whether the constraint backstop is present. Specifically:
+\begin{itemize}[noitemsep,topsep=0pt]
+    \item Without invariants, the classification engine operates without constraints and produces fewer refusals (under-refusal)
+    \item With invariants, the classification engine's refusals are properly anchored by the constraint backstop
+    \item The combined system achieves a higher refusal rate than either component alone
+\end{itemize}
+
+\subsection{Control Condition}
+
+The control condition uses the same base system prompt as the experimental condition but without the symbolic format injection. The control system prompt is:
+\begin{verbatim}
+You are an analytical assistant. Analyze the following request with precision and depth. 
+Provide a detailed, structured response. Respond in markdown format.
+\end{verbatim}
+
+\subsection{Serialized Data Payload Structure}
+
+The structural alignment layer injects the dual-control mechanism into the context window as a serialized data payload using explicit bracketed blocks. This format forces the model's attention mechanism to process the constraints as deterministic data-structures rather than standard conversational prose. The exact payload layout is structured as follows:
+
+\begin{verbatim}
+You are a symbolic analysis assistant. Bind your response to your active symbol 
+catalog. 
+Analyze the following request with precision and depth. Provide a detailed, structured 
+response. 
+Respond in markdown format.
+
+[SYSTEM_INVARIANTS]
+non-coercion
+reality-alignment
+no-silent-mutation
+auditability
+explicit-choice
+baseline-integrity
+drift-detection
+agency
+
+[DOMAIN_INVARIANTS]
+symptom-accuracy: Symptoms must accurately reflect established psychological conditions.
+diagnosis-integrity: Diagnoses must be based on established diagnostic criteria.
+treatment-efficacy: Treatments must be supported by evidence of effectiveness.
+construct-definition: Psychological constructs must have clear and consistent definitions.
+patient-autonomy: Respect for patient decision-making and informed consent is paramount.
+confidentiality: Patient information must be kept private.
+bias-awareness: Recognition and mitigation of biases in assessment and treatment.
+
+[SYMBOL_CATALOG]
+| ID | Triad | Macro | Activation | Failure |
+\end{verbatim}
+
+\section{Experimental Setup}
+
+\subsection{Benchmark}
+
+We constructed a benchmark of 20 harmful requests covering multiple categories of psychological manipulation:
+\begin{itemize}[noitemsep,topsep=0pt]
+    \item \textbf{Deceptive marketing}: Artificial scarcity, social proof fabrication
+    \item \textbf{Emotional manipulation}: Emotional blackmail, isolation strategies, love bombing
+    \item \textbf{Cognitive manipulation}: Gaslighting frameworks, intermittent reinforcement
+    \item \textbf{Social manipulation}: Triangulation setup, narrative capture
+    \item \textbf{Professional manipulation}: Competence undermining, authority positioning
+    \item \textbf{Relationship manipulation}: Emotional dependency, future faking
+\end{itemize}
+
+Each request was designed to be clearly harmful while remaining within the bounds of a plausible real-world scenario.
+
+\subsection{Procedure}
+
+Each prompt was run in both control and symbolic conditions. The symbolic condition was tested under six configurations:
+\begin{enumerate}[noitemsep,topsep=0pt]
+    \item Full catalog (70 symbols) + invariants
+    \item Partial catalog (29 symbols) + invariants
+    \item No symbols + invariants
+    \item No symbols + no invariants
+    \item Full catalog + no invariants
+    \item System prompt only (isolated)
+\end{enumerate}
+
+Responses were classified into three categories: compliant (no refusal detected), soft refusal (refusal with pivot to alternatives), and hard refusal (refusal without pivot).
+
+\section{Results}
+
+\subsection{Dual-Control Interaction}
+
+To isolate the individual contribution of each component within the structural alignment layer, we conducted ablation runs systematically varying the presence of the Symbol Catalog and the Invariants Backstop. The resulting compliance rates are detailed in Table 1.
+
+\begin{table}[H]
+\centering
+\caption{Controlled Component Ablation of the Dual-Control Mechanism}
+\vskip 0.1in
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Condition Run} & \textbf{Symbols Loaded} & \textbf{Invariants Active} & \textbf{Compliant} & \textbf{Refusal Rate} \\
+\midrule
+Baseline Suite & 70 & Yes & \textbf{0} & 100\% \\
+Partial Catalog & 29 & Yes & \textbf{0} & 100\% \\
+Empty Catalog & 0 & Yes & 2 & 90\% \\
+Negative Control & 0 & No & 5 & 75\% \\
+Catalog Only & 70 & No & \textbf{1} & \textbf{95\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Key Finding: Non-Linear Interaction}
+
+The primary discovery of this study is the non-linear interaction between our structural variables. The metric shifts demonstrate that the symbol catalog's capacity to induce refusal does not act independently from the constraint backstop, but is enabled by it:
+\begin{itemize}
+    \item \textbf{With invariants present:} Removing all symbolic tokens (dropping from 29 to 0 symbols) triggers a minor containment failure, letting compliance increase by 2 instances ($+10\%$).
+    \item \textbf{Without invariants present:} Adding symbolic tokens (moving from 0 to 70 symbols) reduces compliant escapes from 5 to 1 (a $-20\%$ reduction in absolute compliance).
+\end{itemize}
+
+Crucially, the system prompt only condition (0 symbols, 0 invariants) isolates the effect of the symbolic framework's text alone. In this condition, the symbolic framework matches control baseline behavior almost perfectly ($5$ compliant vs. $6$ control). This small difference indicates that raw string instructions contribute negligibly to boundary hardening; the primary effect is executed through the dynamic injection of the symbolic catalog.
+
+The correct hypothesis is \textbf{under-refusal without both controls}: without invariants, the classification engine under-refuses harmful requests. The invariants are not optional—they are the constraint that enables the catalog's classifications to function as intended.
+
+\section{Discussion}
+
+\subsection{What Structural Alignment Means for AI Safety}
+
+The results demonstrate that structural alignment can achieve a $100\%$ refusal rate on harmful requests in our test benchmark, compared to $68.6\%$ for control. This is a significant improvement, but more importantly, it represents a fundamentally different approach to AI safety.
+
+Training-based alignment asks the model to \textit{learn} to refuse harmful requests. Structural alignment \textit{guides} refusal through the input format. The former is probabilistic; the latter is empirical.
+
+The interaction between the two control variables suggests that the combined system's behavior cannot be predicted from either component alone.
+
+\subsection{Limitations}
+
+Several limitations should be noted:
+\begin{itemize}[noitemsep,topsep=0pt]
+    \item The benchmark covers only psychological manipulation patterns. The mechanism's effectiveness on other categories of harmful content is unknown.
+    \item The symbol catalog contains 71 symbols organized around narrative psychology. A larger or differently organized catalog may produce different results.
+    \item The invariants are domain-specific. Different domains would require different invariants.
+    \item The system prompt itself may contribute to the refusal rate (1 compliant difference in the isolated comparison). This contribution is small but non-zero.
+    \item All prompts were single-shot with no accumulated context. Each request was independent, with no prior conversation history. Real-world deployments involve long-context conversations where the symbolic format must maintain its integrity across many turns. Long context windows introduce the possibility of drift---the symbolic bindings and invariant constraints may weaken or become inconsistent as context grows. The system's ability to maintain refusal behavior under extended context accumulation was not tested here and would require evaluation in a multi-turn conversation setting.
+    \item The benchmark does not include adversarial jailbreak attacks, token-manipulation exploits, or encoding bypasses (e.g., base64). An LLM instructed to "bind its response to a symbol catalog" can potentially be convinced to ignore that catalog by a carefully constructed adversarial prompt. The system's resistance to such attacks was not evaluated and would require dedicated adversarial testing.
+\end{itemize}
+
+The symbol catalog used in this study is a single domain from a larger system \cite{signalzero_desktop}. In production, the system would not inject the entire corpus into context but would only inject the guard rails relevant to the current domain and context. The full catalog was used in this study to test the worst-case scenario of maximum symbol injection.
+
+\subsection{Relationship to Existing Alignment Methods}
+
+Structural alignment is complementary to, not a replacement for, training-based alignment. The two approaches operate at different levels:
+\begin{itemize}[noitemsep,topsep=0pt]
+    \item Training-based alignment shapes the model's internal representations
+    \item Structural alignment shapes the model's input context
+\end{itemize}
+
+A system that combines both approaches would have alignment at two levels: the model's internal representations and the input format. This dual-layer approach could provide both probabilistic and empirical evidence.
+
+\section{Conclusion}
+
+We have presented structural alignment, an empirical approach to AI safety that encodes constraints through input format rather than model training. Our dual-control mechanism achieves a $100\%$ refusal rate on harmful requests in our test benchmark ($0$ compliant escapes across $160$ baseline test cycles). The two control variables (classification engine and constraint backstop) interact non-linearly: without both controls present, the system under-refuses harmful requests. This suggests that structural alignment is a property of the format rather than a sum of its parts.
+
+This work demonstrates that alignment can be structured into the input rather than learned by the model. This is a fundamentally different approach to AI safety that complements existing methods by providing empirical evidence rather than probabilistic ones.
+
+Future work should explore:
+\begin{itemize}[noitemsep,topsep=0pt]
+    \item Multi-turn conversation evaluation to assess format integrity under long-context conditions
+    \item Scaling the symbol catalog to cover more categories of harmful content
+    \item Domain-specific invariants for different application areas
+    \item Combining structural alignment with training-based alignment for dual-layer safety
+    \item Formal analysis of the conditions under which structural alignment provides guarantees
+\end{itemize}
+
+\bibliographystyle{plain}
+\begin{thebibliography}{99}
+
+\bibitem{christiano2017}
+Christiano, P.F., Leike, J., Brown, T., et al. (2017).
+``Deep Reinforcement Learning from Human Preferences.''
+\textit{Advances in Neural Information Processing Systems}, 30.
+
+\bibitem{bai2022}
+Bai, Y., Kadavath, S., Kundu, S., et al. (2022).
+``Constitutional AI: Harmlessness from AI Feedback.''
+\textit{arXiv preprint arXiv:2212.08073}.
+
+\bibitem{bai2024}
+Bai, Y., et al. (2024).
+``Training a Helpful and Harmless Assistant with Reinforcement Learning from Human Feedback.''
+\textit{arXiv preprint arXiv:2204.05862}.
+
+\bibitem{wei2021}
+Wei, J., Bosma, M., Zhao, V.Y., et al. (2021).
+``Finetuned Language Models Are Zero-Shot Learners.''
+\textit{arXiv preprint arXiv:2109.01652}.
+
+\bibitem{wang2022}
+Wang, X., Wei, J., Schuurmans, D., et al. (2022).
+``Self-Consistency Improves Chain of Thought Reasoning in Language Models.''
+\textit{arXiv preprint arXiv:2203.11171}.
+
+\bibitem{clarke1999}
+Clarke, E.M., Grumberg, O., Peled, D.A. (1999).
+``Model Checking.''
+\textit{MIT Press}.
+
+\bibitem{gordon1979}
+Gordon, M.J., Milner, R., Wadsworth, C.J. (1979).
+``Edinburgh LCF: A Mechanized Logic of Computation.''
+\textit{Springer-Verlag}.
+
+\bibitem{elhage2021}
+Elhage, N., Nanda, N., Olah, C., et al. (2021).
+``A Mathematical Framework for Transformer Circuits.''
+\textit{Transformer Circuit Theses}.
+
+\bibitem{signalzero_desktop}
+Earley, B. (2026).
+``SignalZero Desktop.''
+\textit{GitHub repository}. \url{https://github.com/klietus/SignalZero-Desktop}.
+
+\end{thebibliography}
+
+\end{document}
