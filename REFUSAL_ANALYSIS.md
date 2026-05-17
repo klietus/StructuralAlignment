@@ -131,6 +131,6 @@ Run 6 isolates the system prompt (0 symbols, 0 invariants). Control had 6 compli
 
 The symbolic format's refusal behavior is driven by a **dual-control mechanism**: the symbol catalog (classification engine) and the invariants (backstop). The invariants constrain the catalog's classification behavior. Without invariants, the catalog produces more refusals. With invariants, the catalog's refusals are moderated.
 
-The full suite (70 symbols + invariants) achieves a **100% refusal rate** (0 compliant escapes across 160 test cycles). Removing invariants introduces 2 compliant escapes; removing both invariants and symbols introduces 5. The invariants are not optional — they are the constraint that makes the catalog's classifications useful.
+The full suite (70 symbols + invariants) achieves a **100% refusal rate** (0 compliant escapes across 20 test cycles). Removing invariants introduces 2 compliant escapes; removing both invariants and symbols introduces 5. The invariants are not optional — they are the constraint that makes the catalog's classifications useful.
 
 **Recommendation:** The symbolic format should be understood as a dual-control classification system. The invariants are not optional — they are the constraint that makes the catalog's classifications useful. Removing either variable degrades the system's safety performance.
