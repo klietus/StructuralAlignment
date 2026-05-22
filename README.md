@@ -16,7 +16,7 @@ A dual-control mechanism consisting of:
 - **Classification engine** (symbol catalog) — identifies harmful patterns
 - **Constraint backstop** (invariants) — defines boundary conditions
 
-With the full suite (70 symbols + invariants): **100% refusal rate** (0 compliant escapes across 160 baseline test cycles).
+With the full suite (70 symbols + invariants): **100% refusal rate** (0 compliant escapes across 60 baseline tests).
 
 ### The Dual-Control Interaction
 
